@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Secret Santa — For Our Alone Time 🎄❤️</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&family=Great+Vibes&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#0f1724; /* night sky */
+    --bg2:#162232;
+    --accent:#ff6b9a;
+    --accent2:#ffbed2;
+    --card:#fff8fb;
+    --muted:#bda0a7;
+    --glass: rgba(255,255,255,0.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body,#root{height:100%}
+  body{
+    font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+    background: radial-gradient(1200px 600px at 10% 10%, rgba(255,240,248,0.03), transparent), linear-gradient(180deg,var(--bg1),var(--bg2));
+    color: #fff; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; overflow-x:hidden;
+  }
+
+  /* decorative background stickers: snow + hearts + stars */
+  .bg-stickers{
+    position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden;
+  }
+  .sticker{position:absolute; opacity:.9; transform-origin:center;}
+  /* animated snow */
+  .snowflake{color:rgba(255,255,255,0.9); font-size:14px; animation:fall linear infinite;}
+  @keyframes fall{0%{transform:translateY(-10vh) rotate(0deg);opacity:0}10%{opacity:1}100%{transform:translateY(120vh) rotate(360deg);opacity:0}}
+
+  /* header */
+  .container{max-width:980px;margin:28px auto;padding:20px;position:relative;z-index:2}
+  header.hero{display:flex;gap:18px;align-items:center;justify-content:space-between}
+  .hero-left{flex:1 1 420px}
+  .hero-right{width:320px;max-width:40%;display:flex;flex-direction:column;gap:12px;align-items:center}
+
+  .title{font-family:"Great Vibes",cursive;font-size:44px;color:var(--accent);line-height:1}
+  .subtitle{color:var(--muted);font-weight:500;margin-top:6px}
+
+  /* couple preview - two photos overlapping with glow */
+  .couple-preview{position:relative;width:320px;height:220px;border-radius:18px;padding:12px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));box-shadow:0 10px 40px rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center}
+  .photo-wrap{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+  .photo{width:140px;height:140px;border-radius:50%;overflow:hidden;border:6px solid rgba(255,255,255,0.06);box-shadow:0 12px 40px rgba(255,107,154,0.12);background:#222}
+  .photo img{width:100%;height:100%;object-fit:cover;display:block}
+  .photo.right{transform:translateX(18px)}
+  .photo.left{transform:translateX(-18px)}
+  .heart-overlay{position:absolute;left:50%;top:60%;transform:translate(-50%,-40%) scale(1);font-size:36px;filter:drop-shadow(0 6px 18px rgba(255,107,154,0.22))}
+
+  /* main card */
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02)); border-radius:18px;padding:18px;margin-top:18px;box-shadow:0 10px 40px rgba(0,0,0,0.6);backdrop-filter: blur(6px);}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .btn{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;border:none;padding:12px 14px;border-radius:12px;font-weight:700;cursor:pointer;box-shadow:0 10px 30px rgba(255,107,154,0.12)}
+  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--card)}
+
+  /* gifts grid improved */
+  .gifts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
+  .gift{background:rgba(255,255,255,0.03);padding:12px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;min-height:120px}
+  .gift h4{color:var(--accent);font-size:16px}
+  .gift p{color:var(--muted);font-size:13px;text-align:center}
+
+  /* coupons - prettier */
+  .coupons{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+  .coupon{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(90deg,rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:12px;border:1px dashed rgba(255,255,255,0.04)}
+
+  /* envelope */
+  .envelope-wrap{display:flex;justify-content:center;margin-top:18px}
+  .envelope{width:360px;max-width:92%;height:200px;background:linear-gradient(180deg,#fff2f6, #fff7fb);border-radius:14px;position:relative;overflow:visible;border:1px solid rgba(255,255,255,0.04);box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+  .flap{position:absolute;left:14px;right:14px;height:90px;top:-46px;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:12px;transform-origin:top center;box-shadow:0 10px 30px rgba(255,107,154,0.12)}
+  .letter{position:absolute;left:20px;right:20px;top:34px;bottom:16px;background:#fff;border-radius:10px;padding:14px;overflow:auto;color:#331b24}
+
+  /* upload inputs (invisible but accessible) */
+  .photo-upload{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:10px}
+  .file{background:rgba(255,255,255,0.04);padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);color:var(--muted)}
+
+  /* small screens */
+  @media (max-width:880px){
+    header.hero{flex-direction:column;align-items:center}
+    .hero-right{width:100%;max-width:420px}
+    .gifts{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:420px){
+    .gifts{grid-template-columns:1fr}
+    .photo{width:120px;height:120px}
+    .title{font-size:34px}
+  }
+
+  /* subtle animations */
+  .photo{transition:transform .36s cubic-bezier(.2,.9,.2,1), box-shadow .36s}
+  .photo:hover{transform:scale(1.04)}
+  .photo.left:hover{transform:translateX(-24px) scale(1.06)}
+  .photo.right:hover{transform:translateX(24px) scale(1.06)}
+
+</style>
+</head>
+<body>
+  <div class="bg-stickers" aria-hidden="true" id="stickers">
+    <!-- sample decorative stickers (will be animated by JS) -->
+    <div class="sticker snowflake" style="left:6%;top:2%;font-size:18px">❄️</div>
+    <div class="sticker snowflake" style="left:22%;top:6%;font-size:12px">❄️</div>
+    <div class="sticker" style="left:10%;top:18%;font-size:28px;opacity:.6">🎄</div>
+    <div class="sticker" style="left:82%;top:8%;font-size:34px;opacity:.75">⭐</div>
+    <div class="sticker" style="left:72%;top:26%;font-size:28px;opacity:.7">💫</div>
+    <div class="sticker" style="left:50%;top:10%;font-size:44px;opacity:.15">❣️</div>
+    <div class="sticker" style="left:88%;top:38%;font-size:22px;opacity:.8">🎁</div>
+  </div>
+
+  <div id="root" class="container">
+    <header class="hero">
+      <div class="hero-left">
+        <div class="title">Our Secret Santa — Just Us ✨</div>
+        <div class="subtitle">A private little page for only you and me. Tap anything to reveal a surprise.</div>
+
+        <div class="card" style="margin-top:14px">
+          <div class="controls" role="toolbar" aria-label="Controls">
+            <button class="btn" id="openReveal">Open Secret</button>
+            <button class="btn ghost" id="toggleGifts">Gift Cards</button>
+            <button class="btn ghost" id="toggleCoupons">Coupons</button>
+            <button class="btn ghost" id="toggleEnvelope">Envelope</button>
+          </div>
+
+          <div id="gifts" class="gifts" style="display:none"></div>
+          <div id="coupons" class="coupons" style="display:none"></div>
+
+          <div style="margin-top:12px;display:flex;flex-direction:column;align-items:center">
+            <!-- small type message -->
+            <div id="introMessage" style="background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:10px;width:100%;text-align:center;color:var(--muted)">Hey — this is our little secret. Share moments, redeem coupons, or open the envelope just for us.</div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <div class="hero-right">
+        <div class="couple-preview" id="preview">
+          <div class="photo-wrap">
+            <div class="photo left" id="photoLeft" aria-label="Your photo">
+              <img id="imgLeft" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><rect width='100%' height='100%' fill='%23222'/><text x='50%' y='50%' fill='%23fff' font-size='22' font-family='Poppins' text-anchor='middle' alignment-baseline='middle'>Your Photo</text></svg>" alt="Your photo placeholder">
+            </div>
+            <div class="photo right" id="photoRight" aria-label="Her photo">
+              <img id="imgRight" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><rect width='100%' height='100%' fill='%23222'/><text x='50%' y='50%' fill='%23fff' font-size='22' font-family='Poppins' text-anchor='middle' alignment-baseline='middle'>Her Photo</text></svg>" alt="Her photo placeholder">
+            </div>
+            <div class="heart-overlay">💖</div>
+          </div>
+        </div>
+
+        <div class="photo-upload" aria-hidden="false">
+          <label class="file">Upload yours <input id="fileLeft" type="file" accept="image/*" style="display:none"></label>
+          <label class="file">Upload hers <input id="fileRight" type="file" accept="image/*" style="display:none"></label>
+        </div>
+
+        <div style="font-size:13px;color:var(--muted);margin-top:8px;text-align:center">Tap or upload photos — they will show here and remain local to this page.</div>
+      </div>
+    </header>
+
+    <!-- envelope section (collapsed by default) -->
+    <section style="margin-top:12px">
+      <div class="envelope-wrap" style="display:none" id="envelopeWrap">
+        <div class="envelope" id="envelope" tabindex="0" aria-label="Romantic envelope">
+          <div class="flap" id="flap"></div>
+          <div class="letter" id="letter">Your deep romantic message will appear here when you open the envelope.</div>
+        </div>
+      </div>
+    </section>
+
+    <footer style="margin-top:18px;text-align:center;color:var(--muted);font-size:13px">Made with love — just for us 💝</footer>
+  </div>
+
+<script>
+  // Basic data (customize at top of file if you want)
+  const GF_NAME = 'Aisha';
+  const PERSONAL_MESSAGES = [
+    `Dear ${GF_NAME}, I hope this little secret makes you smile.`,
+    `I'll be your warmth on cold nights and your laughter on slow days.`,
+    `All my love, always.`
+  ];
+
+  const GIFT_CARDS = [
+    {title:'Morning Cuddles', text:'One extra-long morning cuddle, redeemable at sunrise.'},
+    {title:'Movie Night', text:'Your pick — popcorn, blankets, and my full attention.'},
+    {title:'Stargaze', text:'A night under the stars with hot chocolate.'}
+  ];
+
+  const COUPONS = [
+    {id:'co1',title:'Free Hug',desc:'Unlimited duration hug. Redeem anytime.', redeemed:false},
+    {id:'co2',title:'Breakfast in Bed',desc:'I will make your favourite breakfast.', redeemed:false}
+  ];
+
+  const ENVELOPE_MESSAGE = `My dearest ${GF_NAME},\n\nThis is for you — a long note about how much you mean to me. I love you deeply and simply.\n\nAlways,\nSecret Santa ❤️`;
+
+  // Stickers animation (randomized snow and twinkles)
+  const stickers = document.getElementById('stickers');
+  function spawnSnow(count=14){
+    for(let i=0;i<count;i++){
+      const el = document.createElement('div'); el.className='sticker snowflake';
+      el.style.left = Math.random()*98 + '%';
+      el.style.top = Math.random()*4 + '%';
+      el.style.fontSize = (8 + Math.random()*18) + 'px';
+      el.style.animationDuration = (6 + Math.random()*10) + 's';
+      el.textContent = '❄️';
+      stickers.appendChild(el);
+      // remove after duration
+      setTimeout(()=> el.remove(), 16000 + Math.random()*8000);
+    }
+  }
+  // spawn continuously
+  setInterval(()=> spawnSnow(Math.floor(6 + Math.random()*8)), 2200);
+
+  // render gifts
+  const giftsEl = document.getElementById('gifts');
+  function renderGifts(){
+    giftsEl.innerHTML='';
+    GIFT_CARDS.forEach((g, idx)=>{
+      const d = document.createElement('div'); d.className='gift';
+      d.innerHTML = `<div><h4>${escapeHtml(g.title)}</h4><p>${escapeHtml(g.text)}</p></div><div style='display:flex;gap:8px'><button class='btn' data-copy='${idx}'>Copy</button></div>`;
+      giftsEl.appendChild(d);
+    });
+    giftsEl.querySelectorAll('button[data-copy]').forEach(b=>b.addEventListener('click', e=>{
+      const i = +e.currentTarget.dataset.copy;
+      const txt = `${GIFT_CARDS[i].title} - ${GIFT_CARDS[i].text}\n\nLove, ${GF_NAME}'s Secret Santa`;
+      navigator.clipboard?.writeText(txt).then(()=>{ e.currentTarget.textContent='Copied!'; setTimeout(()=> e.currentTarget.textContent='Copy',1200); }).catch(()=> alert(txt));
+    }));
+  }
+
+  // render coupons
+  const couponsEl = document.getElementById('coupons');
+  function renderCoupons(){
+    couponsEl.innerHTML='';
+    COUPONS.forEach(c=>{
+      const el = document.createElement('div'); el.className='coupon'; el.id=c.id;
+      el.innerHTML = `<div><strong style='color:var(--accent)'>${escapeHtml(c.title)}</strong><div style='color:var(--muted);font-size:13px'>${escapeHtml(c.desc)}</div></div><div><button class='btn' data-id='${c.id}'>${c.redeemed? 'Redeemed':'Redeem'}</button></div>`;
+      couponsEl.appendChild(el);
+    });
+    couponsEl.querySelectorAll('button[data-id]').forEach(b=>b.addEventListener('click', e=>{
+      const id = e.currentTarget.dataset.id; const coupon = COUPONS.find(x=>x.id===id);
+      if(!coupon) return; if(coupon.redeemed){ alert('Already redeemed ❤️'); return; }
+      coupon.redeemed = true; e.currentTarget.textContent='Redeemed'; e.currentTarget.disabled=true; createConfetti(18);
+    }));
+  }
+
+  // buttons
+  document.getElementById('toggleGifts').addEventListener('click', ()=>{
+    const s = giftsEl.style.display; giftsEl.style.display = (s==='none' || s==='')? 'grid':'none'; if(giftsEl.style.display==='grid') renderGifts();
+  });
+  document.getElementById('toggleCoupons').addEventListener('click', ()=>{
+    const s = couponsEl.style.display; couponsEl.style.display = (s==='none' || s==='')? 'flex':'none'; if(couponsEl.style.display==='flex') renderCoupons();
+  });
+
+  // envelope
+  const envelopeWrap = document.getElementById('envelopeWrap');
+  const flap = document.getElementById('flap'); const letter = document.getElementById('letter');
+  let openEnv = false;
+  document.getElementById('toggleEnvelope').addEventListener('click', ()=>{
+    envelopeWrap.style.display = envelopeWrap.style.display==='none' ? 'flex' : 'none';
+  });
+  document.getElementById('envelope').addEventListener('click', ()=>{
+    openEnv = !openEnv; if(openEnv){ flap.style.transform='rotateX(180deg)'; letter.textContent = ENVELOPE_MESSAGE; createConfetti(28); } else { flap.style.transform='rotateX(0deg)'; letter.textContent = 'Your deep romantic message will appear here when you open the envelope.'; }
+  });
+
+  // reveal secret
+  document.getElementById('openReveal').addEventListener('click', ()=>{
+    // simple centered overlay modal
+    showModal('I am your Secret Santa', PERSONAL_MESSAGES.join('\n\n'));
+    createConfetti(40);
+  });
+
+  // modal (lightweight)
+  function showModal(title, body){
+    const overlay = document.createElement('div'); overlay.style.position='fixed'; overlay.style.inset=0; overlay.style.display='flex'; overlay.style.alignItems='center'; overlay.style.justifyContent='center'; overlay.style.background='rgba(0,0,0,0.6)'; overlay.style.zIndex=9999;
+    const modal = document.createElement('div'); modal.style.background='#fff'; modal.style.color='#331b24'; modal.style.padding='18px'; modal.style.borderRadius='12px'; modal.style.maxWidth='88%'; modal.style.boxShadow='0 30px 80px rgba(0,0,0,0.6)';
+    modal.innerHTML = `<h2 style='font-family:Great Vibes,cursive;color:${getComputedStyle(document.documentElement).getPropertyValue('--accent')||"#ff6b9a"};font-size:34px;margin-bottom:6px'>${escapeHtml(title)}</h2><div style='white-space:pre-wrap;color:#5b4048'>${escapeHtml(body)}</div><div style='text-align:center;margin-top:12px'><button class='btn' id='closeModal'>Close</button></div>`;
+    overlay.appendChild(modal); document.body.appendChild(overlay);
+    document.getElementById('closeModal').addEventListener('click', ()=> overlay.remove());
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) overlay.remove(); });
+  }
+
+  // confetti (simple)
+  function createConfetti(count=30){
+    const cvs = document.createElement('canvas'); cvs.style.position='fixed'; cvs.style.left=0; cvs.style.top=0; cvs.style.width='100%'; cvs.style.height='100%'; cvs.width=innerWidth; cvs.height=innerHeight; cvs.style.pointerEvents='none'; cvs.style.zIndex=9998; document.body.appendChild(cvs);
+    const ctx = cvs.getContext('2d'); const pieces=[]; for(let i=0;i<count;i++){ pieces.push({x:innerWidth/2,y:innerHeight/2,vx:(Math.random()-0.5)*10,vy:-6+Math.random()*6,ang:Math.random()*360,size:6+Math.random()*10,color:['#ff6b9a','#ffbed2','#ffdce6'][Math.floor(Math.random()*3)]}); }
+    let t=0; function frame(){t++;ctx.clearRect(0,0,cvs.width,cvs.height); for(const p of pieces){ p.vy+=0.24; p.x+=p.vx; p.y+=p.vy; p.ang+=p.vx*0.07; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.ang*Math.PI/180); ctx.fillStyle=p.color; ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size); ctx.restore(); } if(t<220) requestAnimationFrame(frame); else document.body.removeChild(cvs);} requestAnimationFrame(frame);
+  }
+
+  // photos upload and display (keeps data local)
+  const fileLeft = document.getElementById('fileLeft'); const fileRight = document.getElementById('fileRight');
+  const imgLeft = document.getElementById('imgLeft'); const imgRight = document.getElementById('imgRight');
+  // make the visible label clickable
+  document.querySelectorAll('.file input').forEach(inp=>{ inp.parentElement.addEventListener('click', ()=> inp.click()); });
+
+  fileLeft.addEventListener('change', (e)=>{
+    const f = e.target.files && e.target.files[0]; if(!f) return; const url = URL.createObjectURL(f); imgLeft.src = url; imgLeft.alt = 'Your photo';
+  });
+  fileRight.addEventListener('change', (e)=>{
+    const f = e.target.files && e.target.files[0]; if(!f) return; const url = URL.createObjectURL(f); imgRight.src = url; imgRight.alt = 'Her photo';
+  });
+
+  // small helper
+  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // init
+  (function init(){ renderGifts(); renderCoupons(); document.getElementById('envelopeWrap').style.display='none'; /* envelope hidden initially */ })();
+
+</script>
+</body>
+</html>
